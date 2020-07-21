@@ -1,0 +1,323 @@
+package tic;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.JButton;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import java.awt.Font;
+/**********************************************************************
+ * Panel contains the brains and GUI for game.
+ *
+ * @author Micheal James
+ * @version 20 JULY 2020
+ *********************************************************************/
+class Panel extends JPanel {
+    /**panel for the AI toggle button and future buttons.**/
+    private final JPanel buttonPanel = new JPanel();
+    /**panel for the game board.**/
+    private final JPanel boardPanel = new JPanel();
+    /**button to toggle AI on and off.**/
+    private final JButton aI = new JButton("AI OFF");
+    /**buttons to play on board.**/
+    private final JButton[] buttons = new JButton[9];
+    /**determines whose turn it is.**/
+    private int turn = 0;
+
+     Panel() {
+        //setting panel to 3/3 grid for board
+        boardPanel.setLayout(new GridLayout(3, 3));
+        add(boardPanel, "North");   //location of board is at top
+         //setting size of board
+        boardPanel.setPreferredSize(new Dimension(600, 600));
+        add(buttonPanel, "South");  //setting location of AI button to bottom
+         //setting the size of AI button panel
+        buttonPanel.setPreferredSize(new Dimension(600, 50));
+        createBoard();  //calls function to generate board
+    }
+    /**********************************************************************
+     * Void function that creates the game board.
+     *
+     *
+     *********************************************************************/
+    public void createBoard() {
+        //setting font size for X and O's
+        Font large = new Font("Dialog", Font.PLAIN, 200);
+        //loops through each game button to represent game board
+        for (int i = 0; i <= 8; i++) {
+            buttons[i] = new JButton(); //creating each game location
+            buttons[i].setText(""); //setting game location as blank
+            //enabling button
+            buttons[i].addActionListener(new ButtonListener());
+
+            boardPanel.add(buttons[i]); //adds game buttons to JPanel
+            buttons[i].setFont(large);  //sets the font to large for X and O
+        }
+        aI.addActionListener(new ButtonListener()); //enables AI button
+        buttonPanel.add(this.aI);   //adds AI button to Jpanel
+
+
+    }
+
+    public void clearBoard() {
+        //loops through each game button to clear it
+        for (int i = 0; i <= 8; i++) {
+            buttons[i].setText(""); //sets text to blank to clear
+        }
+    }
+
+    /******************************************************************
+     * Action listener that is triggered on a button press on the GUI.
+     *
+     *
+     *****************************************************************/
+    public class ButtonListener implements ActionListener {
+
+        public void actionPerformed(final ActionEvent e) {
+            //finds the button pressed
+            JButton buttonPress = (JButton) e.getSource();
+            //if it is P1 and tile is empty
+            if (turn % 2 == 0 && buttonPress.getText().equals("")) {
+                buttonPress.setForeground(Color.BLUE);     //set text to blue
+                //place O for P1 play on pressed button
+                buttonPress.setText("O");
+                turn++; //increment number of turns
+                ///if it is P2 and tile is empty
+            } else if (turn % 2 == 1 && buttonPress.getText().equals("")) {
+                buttonPress.setForeground(Color.RED);   //set text to red
+                //place X for P2 play on pressed button
+                buttonPress.setText("X");
+                turn++; //increment number of turns
+                //if AI button is pressed toggle ON
+            } else if (buttonPress.getText().equals("AI OFF")) {
+                buttonPress.setText("AI ON");
+                //if AI button is pressed toggle OFF
+            } else if (buttonPress.getText().equals("AI ON")) {
+                buttonPress.setText("AI OFF");
+            } else {        //if user picks spot already taken notify user
+                JOptionPane.showMessageDialog(null,
+                        "Spot already taken. Pick another Spot");
+            }
+            if (checkForWin() && turn % 2 == 0) {   //check for Player 2 win
+                //notify user of Player2  win
+                JOptionPane.showMessageDialog(null,
+                        "Game Over. Player 2 Wins");
+                clearBoard();   //calls function to clear board
+                turn = 0;   //reset number of turns
+                //check for Player 1 win
+            } else if (checkForWin() && turn % 2 == 1) {
+                //notify user of Player 1 win
+                JOptionPane.showMessageDialog(null,
+                        "Game Over. Player 1 Wins");
+                clearBoard();   //calls function to clear board
+                turn = 0;   //reset number of turns
+            } else if (turn == 9) {    //if there have been 9 plays
+                JOptionPane.showMessageDialog(null,
+                        "Game Over. Tie");  //notify user that the game is a tie
+                clearBoard();   //calls function to clear board
+                turn = 0;       //resets number of turns
+            }
+            //check if AI needs to play
+            if (aI.getText().equals("AI ON") && turn % 2 == 1) {
+                //location that AI plays
+                int ai = aIPlay();
+                buttons[ai].setForeground(Color.RED);   //set text color to red
+                //make AI play to where determined as a X
+                buttons[ai].setText("X");
+                turn++; //increment number of tuns
+            }
+
+
+        }
+
+    }
+    /******************************************************************
+     * Checks where the AI should play.
+     *
+     * @return i location where AI should play
+     *
+     *****************************************************************/
+    public int aIPlay() {
+        //loop through all potential areas for AI to play
+        int k = 0;
+        for (int i = 0; i < 9; i++) {
+            //check if area is not played on
+            if (buttons[i].getText().equals("")) {
+                k = i;
+                break;
+            }
+
+        }
+        return k;   //return location to play on
+    }
+
+    /******************************************************************
+     * Check if a player has won.
+     *
+     * @return true if a player has won
+     *
+     *****************************************************************/
+    public boolean checkForWin() {
+        for (int i = 0; i <= 6; i += 3) {   //check for a horizontal win
+            if (match(i, i + 1) && match(i + 1, i + 2)) {
+                return true;
+            }
+        }
+
+
+        for (int i = 0; i <= 2; i++) {    //check for a vertical win
+            if (match(i, i + 3) && match(i + 3, i + 6)) {
+                return true;
+            }
+        }
+
+
+        for (int i = 0; i <= 1; i++) {   //check for a diagonal win
+            if (match(i * 2, 4) && match(4, 8 - i * 2)) {
+                return true;
+            }
+        }
+
+        return false;   //if there is no win then return false
+    }
+    /******************************************************************
+     * Check if two locations match text.
+     *
+     * @param x first button to check
+     * @param y second button to check
+     * @return true if text on both buttons match
+     *
+     *****************************************************************/
+    public boolean match(final int x, final int y) {
+
+        if (isPlayedOn(x)) {    //check if a tile is played on
+            //check if two locations played on are from the same player
+            return buttons[x].getText().equals(buttons[y].getText());
+        } else {
+            return false;   //if not return false
+        }
+    }
+    /******************************************************************
+     * Check if a spot has been played on.
+     *
+     * @param x button to check if played on
+     * @return true if button has text therefore played on
+     *
+     *****************************************************************/
+    public boolean isPlayedOn(final int x) {
+        //check if button has a X or O to see if played on
+        return buttons[x].getText().equals("X")
+                || buttons[x].getText().equals("O");
+    }
+}
+
+
+package tic;
+import javax.swing.JFrame;
+/**********************************************************************
+ * Main function to run program.
+ *
+ * @author Micheal James
+ * @version 20 July 2020
+ *********************************************************************/
+  public final class Main {
+      private Main() {
+
+      }
+
+    /**********************************************************************
+     * Main  static function to run program.
+     *
+     * @param args
+     *********************************************************************/
+     public static void main(final String[] args) {
+        final JFrame ticTac = new JFrame("tic-Tac-Toe"); //create new GUI titled
+        ticTac.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  //close on exit
+        ticTac.setBounds(800, 800, 600, 700);  //set the bounds for the Game GUI
+        ticTac.setVisible(true);    //make the GUI visible
+         //gets the  content of Panel class for the GUI
+        ticTac.getContentPane().add(new Panel());
+    }
+}
+package tic;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+
+/**********************************************************************
+ * Test cases for backend of tic tac toe game. This testing provides
+ * 100% coverage on all methods and lines in Panel besides the
+ * ButtonListener due to unknown way to test it.
+ *
+ * @author Mike James
+ * @version 20 JULY 2020
+ *********************************************************************/
+public class JUinits {
+    /** temp model for game.*/
+    private Panel game;
+
+    /** to be done after each test.*/
+    @BeforeEach
+    void setup() {
+
+        // Make new  game model for testing
+        game = new Panel();
+    }
+
+    @Test
+    void testIsComplete() {
+        //testing if clear board works
+        game.createBoard();
+        game.buttons[3].setText("X");
+        game.buttons[4].setText("X");
+        game.buttons[5].setText("Y");
+        game.clearBoard();
+        Assertions.assertTrue(game.buttons[3].getText().equals(""));
+    }
+
+    @Test
+    void testIsComplete2() {
+        //testing if row win works
+        game.buttons[1].setText("X");
+    game.buttons[2].setText("X");
+    game.buttons[0].setText("X");
+    Assertions.assertTrue(game.checkForWin());
+    }
+    @Test
+    void testIsComplete3() {
+        //testing if checkForWin can say false
+        game.buttons[1].setText("X");
+        game.buttons[2].setText("X");
+        game.buttons[0].setText("Y");
+        Assertions.assertFalse(game.checkForWin());
+    }
+    @Test
+    void testIsComplete4() {
+        //checks for if collumn win works
+        game.buttons[0].setText("X");
+        game.buttons[3].setText("X");
+        game.buttons[6].setText("X");
+        Assertions.assertTrue(game.checkForWin());
+    }
+    @Test
+    void testIsComplete5() {
+        //checks for diagonal win works
+        game.buttons[0].setText("X");
+        game.buttons[4].setText("X");
+        game.buttons[8].setText("X");
+        Assertions.assertTrue(game.checkForWin());
+    }
+
+    @Test
+    void testIsComplete6() {
+        //checks if aIPlay works
+        game.buttons[0].setText("X");
+        game.buttons[1].setText("X");
+        Assertions.assertTrue(game.aIPlay() == 2);
+    }
+}
